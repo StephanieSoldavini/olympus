@@ -1,0 +1,11 @@
+{
+  "platform": {
+    "name" : "polimi_node",
+    "nodes" : [
+      {
+        "name" : "node1",
+        "type" : "xilinx_u280_xdma_201920_3"
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+cfd/
+__pycache__
+hls/
+mnemosyne/
+wrap/
+bd/
+*.jou
+*.log
+*.str
+*.swp
+*.swo
+.DS_Store
