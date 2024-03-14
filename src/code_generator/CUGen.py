@@ -74,8 +74,9 @@ class CUGen:
 
         # TODO SHOULD COME FROM self.oCtx.target
         self.bus_width = 128
+        print(f"NOTE: BUS WIDTH IS SET TO {self.bus_width}")
         self.bus_type = f"ap_uint<{self.bus_width}>"
-        self.channel_size = 256*1024*1024
+        self.channel_size = 512*1024*1024
 
         self.ring_buf = 1 # TODO
         self.ring_buf = self.ring_buf if (self.ring_buf > 0) else 1 # force a value below 1 to be 1
@@ -87,7 +88,12 @@ class CUGen:
             intl = self.bus_width
             network = self.oCtx.application.networks[netname]
             for k in network.kernels:
-                max_data_width = max([x.data_width for (key,x) in k.parameters.items()])
+                #max_data_width = max([x.data_width for (key,x) in k.parameters.items()])
+                if k.get_non_axi_io():
+                    max_data_width = max([x.data_width for x in k.get_non_axi_io()])
+                else:
+                    max_data_width = 64
+                print("maxdw =", max_data_width)
                 # TODO vvv inefficient, change using multiplicity? iris?
                 intl = min(intl, int(self.bus_width / max_data_width))
 
@@ -144,6 +150,7 @@ class CUGen:
         stream_args = []
         for i in range(intl):
             stream_args.extend([streamify(c.Value(get_type(arg.c_op), arg.c_op.name + str(i))) for arg in device_args])
+        print("Stream args:", [x.inline() for x in stream_args])
         func_args = host_args + stream_args
         func_args.append(self.loop_counter)
         if self.ring_buf > 1:
@@ -429,9 +436,9 @@ class CUGen:
         func_body.append(base_ptr)
         base_mod_ptr = c.Value(ptr_t, f"{base.name}_mod_ptr")
         func_body.append(base_mod_ptr)
-        func_body.append(c.Assign(f"{base_ptr.name}.uint_ptr", f"(uint64_t*){base.name}"))
+        func_body.append(c.Assign(f"{base_ptr.name}.uint_ptr", f"(uint64_t*)({base.name}->to_long())"))
         base_bits = c.Value(f"ap_uint<{base_width}>", f"{base.name}_bits")
-        func_body.append(c.Assign(base_bits.inline(), f"{base_ptr.name}.uint"))
+        func_body.append(c.Assign(base_bits.inline(), f"(uint64_t){base_ptr.name}.uint"))
         func_body.append(c.Assign(f"{base_mod_ptr.name}.uint", f"{base_bits.name}.range({n_lsbs-1},0).to_long()"))
         base_mod = c.Pointer(c.Value("uint64_t", f"{base.name}_mod")) #TODO width
         func_body.append(c.Assign(base_mod.inline(), f"{base_mod_ptr.name}.uint_ptr"))
@@ -588,13 +595,13 @@ class CUGen:
             args += [base_ptr] + axi_io
             args += [value_rename(x, f"{x.name}{i}") for i in range(intl) for x in kernel_offsets]
             args += [k.base_msbs]
-        args += [value_rename(x, f"{x.name}{i}") for i in range(intl) for x in stream_io]
-        args += [value_rename(x, f"{x.name}{i}") for i in range(intl) for x in in_bufs]
-        args += [value_rename(x, f"{x.name}{i}") for i in range(intl) for x in out_bufs]
+        args += [value_rename(x, f"{x.name}{i}") for x in stream_io for i in range(intl)]
+        args += [value_rename(x, f"{x.name}{i}") for x in in_bufs   for i in range(intl)]
+        args += [value_rename(x, f"{x.name}{i}") for x in out_bufs  for i in range(intl)]
         args += [c.Value("hls::stream<ap_uint<1>>&", f"kernel_start{i}") for i in range(intl)]
         args += [c.Value("hls::stream<ap_uint<1>>&", f"kernel_done{i}") for i in range(intl)]
-        args += [value_rename(x, f"{x.name}{i}") for i in range(intl) for x in start_toks]
-        args += [value_rename(x, f"{x.name}{i}") for i in range(intl) for x in done_toks]
+        args += [value_rename(x, f"{x.name}{i}") for x in start_toks for i in range(intl)]
+        args += [value_rename(x, f"{x.name}{i}") for x in done_toks  for i in range(intl)]
         args.append(self.loop_counter)
         if self.ring_buf > 1:
             args.append(self.ring_buf_flag)
@@ -691,7 +698,6 @@ class CUGen:
 
         ### CU WRAPPER FUNC BODY ###
         cu_body = c.Block()
-        cu_body.append(interface_pragmas)
 
         # Num times for loop 
         numtimesLoopBody = c.Block()
@@ -722,6 +728,7 @@ class CUGen:
                 base_msbs = value_rename(k.base_msbs, f"{k.base_msbs.name}_{k.name}") 
                 driver_args.append(base_msbs)
                 arglist.append(base_msbs)
+                interface_pragmas.append(c.Pragma(f"HLS INTERFACE mode=ap_none port={base_msbs.name}"))
 
             if k.stream_io:
                 driver_args.extend([value_rename(x, f"{x.name}{i}") for x in k.stream_io for i in range(intl)])
@@ -753,6 +760,7 @@ class CUGen:
 
         loopmax = "num_times"
         numtimesLoop = c.For(f"{self.loop_counter.inline()} = 0", f"{self.loop_counter.name} < {loopmax}/{intl}", f"{self.loop_counter.name}++", numtimesLoopBody)
+        cu_body.append(interface_pragmas)
         cu_body.append(numtimesLoop)
         cu_body.append(c.Statement("return"))
     

@@ -35,6 +35,7 @@ from xdsl.irdl import (
     AttrSizedOperandSegments,
     VarOperand,
     var_operand_def,
+    operand_def,
     AnyOf
 )
 from xdsl.ir import (
@@ -70,7 +71,8 @@ class ChannelOp(IRDLOperation):
 @irdl_op_definition
 class IndexOp(IRDLOperation):
     name = "olympus.index"
-    data: OpResult = result_def(ChannelType)
+    channel: Operand = operand_def(ChannelType)
+    data: OpResult = result_def(IndexType)
     depth: IntegerAttr = attr_def(IntegerAttr)
 
 @irdl_op_definition
@@ -95,9 +97,11 @@ Olympus = Dialect(
         [
             ChannelOp,
             KernelOp,
+            IndexOp,
         ],
         [
             ChannelType,
+            IndexType,
         ]
 )
 

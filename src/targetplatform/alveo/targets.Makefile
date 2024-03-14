@@ -69,16 +69,16 @@ OLYMPUS	?= python3 ../../src/code_generator/olympus_codegen.py
 
 all: run
 
-$(RES_OUT_DIR)/results/$(CU_NAME).xo: $(addprefix $(SRC_OUT_DIR)/src/,$(CU_SRC)) $(SRC_OUT_DIR)/$(CFG)
-	@echo "Setup environment"
-	mkdir -p "$(RES_OUT_DIR)/build"
-	mkdir -p "$(RES_OUT_DIR)/results"
-	@echo "Perform HLS (compile hardware)"
-	cd "$(RES_OUT_DIR)/build"; source $(VITIS); source $(XILINX_XRT)/setup.sh; v++ $(DEBUG_FLAGS) -c -t $(TARGET) $(KFLAGS) $(HLS_FLAGS) --config $(CUR_DIR)/$(COMMONCFG) --kernel_frequency $(FREQ) $(HLS_CFG) -k $(CU_NAME) -I$(SRC_OUT_DIR)/src  -o $(RES_OUT_DIR)/results/$(CU_NAME).xo $(addprefix $(SRC_OUT_DIR)/src/,$(CU_SRC))
-	#cp $(CUR_DIR)/input/rtl/*.vhdl $(RES_OUT_DIR)/build/_x/krnl_helm/krnl_helm/krnl_helm/solution/syn/verilog/ 
-	#ls -l $(RES_OUT_DIR)/results
-	#cd "$(RES_OUT_DIR)/build/_x/krnl_helm/krnl_helm/"; source $(VITIS); source $(XILINX_XRT)/setup.sh; vitis_hls -f $(CUR_DIR)/addVHDL.tcl
-	#ls -l $(RES_OUT_DIR)/results
+#$(RES_OUT_DIR)/results/$(CU_NAME).xo: $(addprefix $(SRC_OUT_DIR)/src/,$(CU_SRC)) $(SRC_OUT_DIR)/$(CFG)
+#	@echo "Setup environment"
+#	mkdir -p "$(RES_OUT_DIR)/build"
+#	mkdir -p "$(RES_OUT_DIR)/results"
+#	@echo "Perform HLS (compile hardware)"
+#	cd "$(RES_OUT_DIR)/build"; source $(VITIS); source $(XILINX_XRT)/setup.sh; v++ $(DEBUG_FLAGS) -c -t $(TARGET) $(KFLAGS) $(HLS_FLAGS) --config $(CUR_DIR)/$(COMMONCFG) --kernel_frequency $(FREQ) $(HLS_CFG) -k $(CU_NAME) -I$(SRC_OUT_DIR)/src  -o $(RES_OUT_DIR)/results/$(CU_NAME).xo $(addprefix $(SRC_OUT_DIR)/src/,$(CU_SRC))
+#	#cp $(CUR_DIR)/input/rtl/*.vhdl $(RES_OUT_DIR)/build/_x/krnl_helm/krnl_helm/krnl_helm/solution/syn/verilog/ 
+#	#ls -l $(RES_OUT_DIR)/results
+#	#cd "$(RES_OUT_DIR)/build/_x/krnl_helm/krnl_helm/"; source $(VITIS); source $(XILINX_XRT)/setup.sh; vitis_hls -f $(CUR_DIR)/addVHDL.tcl
+#	#ls -l $(RES_OUT_DIR)/results
 
 $(RES_OUT_DIR)/results/$(CU_NAME)_$(N_CU)CU.xclbin: $(RES_OUT_DIR)/results/$(CU_NAME).xo $(SRC_OUT_DIR)/$(CFG)
 	@echo "Setup environment" 

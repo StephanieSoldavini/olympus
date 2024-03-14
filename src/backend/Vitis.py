@@ -1,7 +1,7 @@
 import os
 
-import code_generator.code_generator as Code
-import code_generator.cpp_generator as Cpp
+#import code_generator.code_generator as Code
+#import code_generator.cpp_generator as Cpp
 
 from backend.Backend import Backend
 

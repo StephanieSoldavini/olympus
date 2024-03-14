@@ -7,7 +7,7 @@ from xdsl.dialects.builtin import Builtin, IntegerType
 from xdsl.dialects.func import Func
 from xdsl.ir import MLContext
 from xdsl.utils.exceptions import VerifyException
-from dialects.olympus import Olympus, KernelOp
+from dialects.olympus import Olympus, KernelOp, ChannelOp, IndexOp
 
 import cgen as c # TODO decouple
 
@@ -141,16 +141,25 @@ class ApplicationKernel:
         #print("op inouts:",  [x.name_hint for x in operator.inouts ])
         self.parameters = {}
         for inp in operator.inputs:
-            self.process_param(inp, operator, param_id, "in")
-            param_id += 1
+            if isinstance(inp.op, ChannelOp):
+                self.process_param(inp, operator, param_id, "in")
+                param_id += 1
+            elif isinstance(inp.op, IndexOp):
+                print("index")
+            else:
+                print("ERROR: Input not channel or index:", inp)
+                exit(1)
         for outp in operator.outputs:
             self.process_param(outp, operator, param_id, "out")
             param_id += 1
         for iop in operator.inouts:
             self.process_param(iop, operator, param_id, "inout")
             param_id += 1
-        self.bundles = {}
-        self.find_bundles()
+        if self.get_axi_io():
+            self.bundles = {}
+            self.find_bundles()
+        else:
+            print("NO AXI")
 
     def __str__(self):
         return f"{self.name}"
@@ -165,6 +174,17 @@ class ApplicationKernel:
         elif self.name == "kernelY":
             #self.bundles = {"gmem1" : ["x_K", "ox_F", "ex_O", "iox_H"]}
             self.bundles = {"gmem1" : [ "ox_F", "ex_O"]}
+        elif self.name == "taumol_sw_top":
+            self.bundles = {"gmem0" : ["k_maj"], "gmem1" : ["tau_g"], "gmem2" : ["tau_r"]}
+        elif self.name == "kernel_projection":
+            self.bundles = {"common" : ["kernel_projection_0", "kernel_projection_1", "kernel_projection_2"]}
+        elif self.name == "kernel_viterbi":
+            self.bundles = {"common" : ["kernel_viterbi_0", "kernel_viterbi_1", "kernel_viterbi_2"]}
+        elif self.name == "helmholtz":
+            self.bundles = {"gmem0" : ["S", "u", "D"], "gmem1" : ["v"]}
+        else: 
+            print(f"ERROR: Missing bundle mapping for kernel: {self.name}")
+            exit()
         for b in self.bundles:
             for p in self.bundles[b]:
                 self.parameters[p].bundle = b
@@ -176,13 +196,16 @@ class ApplicationKernel:
         param = Param(io, channel_name, direction)
         #print(io)
         for i in io.uses:
-            if i.operation.callee.data != self.name:
-                if direction == "out":
-                    self.users.add(i.operation.callee.data)
-                elif direction == "in":
-                    self.uses.add(i.operation.callee.data)
-                else:
-                    print("ERROR: Dependency on inout")
+            if isinstance(i.operation, KernelOp):
+                if i.operation.callee.data != self.name:
+                    if direction == "out":
+                        self.users.add(i.operation.callee.data)
+                    elif direction == "in":
+                        self.uses.add(i.operation.callee.data)
+                    else:
+                        print("ERROR: Dependency on inout")
+            else:
+                print("NOT A KERNEL OP")
 
         self.parameters[channel_name] = param
         #print("ADDED PARAM:", param.channel_name, param.direction)
