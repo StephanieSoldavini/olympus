@@ -1,6 +1,15 @@
 # olympus
 design methOds for simpLifYing the creation of doMain-sPecific memory architectUreS
 
+Olympus is a prototype system level design tool for hardware accelerators develeoped by the SoClab at Politecnico di Milano. 
+
+If you use the code, we would appreciate a citation to:
+
+>Stephanie Soldavini, Karl Friebel, Mattia Tibaldi, Gerald Hempel, Jeronimo Castrillon, and Christian Pilato.
+>2023. Automatic Creation of High-bandwidth Memory Architectures from Domain-specific Languages: The Case of Computational Fluid Dynamics.
+>ACM Trans. Reconfigurable Technol. Syst. 16, 2, Article 21 (June 2023), 34 pages. https://doi.org/10.1145/3563553
+
+
 Necessary dependencies:
 
 `python3.10`
@@ -171,4 +180,15 @@ interpretation of the data is not important, only the width. Therefore a
 32-bit float, a fixed-point value with 10 integer bits and 22 fraction
 bits, and a 32-bit integer should all be represented as '`i32`'.
 
+-----------------------
+
+### Contact ###
+
+Stephanie Soldavini (Politecnico di Milano): stephanie.soldavini@polimi.it
+
+Christian Pilato (Politecnico di Milano): christian.pilato@polimi.it
+
+### Acknowledgements ### 
+
+This work was partially funded by the EU Horizon 2020 Programme under grant agreement No 957269 ([EVEREST](https://everest-h2020.eu/)).
 
