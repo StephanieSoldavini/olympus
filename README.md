@@ -8,6 +8,7 @@ Necessary dependencies:
 Python dependencies:
 
 `pip3 install cgen`
+
 `pip3 install xdsl`
 
 Tested with Xilinx tools version 2021.1, change path to tools in `targetplatform/alveo/platform_cfg.Makefile`
