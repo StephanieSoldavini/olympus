@@ -3,11 +3,12 @@ design methOds for simpLifYing the creation of doMain-sPecific memory architectU
 
 Necessary dependencies:
 
-`python3`
+`python3.10`
 
 Python dependencies:
 
 `pip3 install cgen`
+`pip3 install xdsl`
 
 Tested with Xilinx tools version 2021.1, change path to tools in `targetplatform/alveo/platform_cfg.Makefile`
 
